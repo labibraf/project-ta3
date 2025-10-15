@@ -1,31 +1,92 @@
 @extends('layouts.mantis')
 @section('content')
-<div class="card">
-    <div class="card-header">
-        <h2 class="card-title">Data Bagian</h2>
-    </div>
-    <div class="card-body">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Nama Bagian</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($bagians as $bagian)
-                    <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td>{{ $bagian->nama_bagian }}</td>
-                        <td>
-                            <a href="{{ route('bagian.show', $bagian->id) }}" class="btn btn-primary">detail</a>
-                            <a href="{{ route('bagian.destroy', $bagian->id) }}" class="btn btn-danger" data-confirm-delete="true">Hapus</a>
-                        </td>
-                    </tr>
+<div class="">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="text-center">Daftar Departemen</h2>
+            <a href="{{ route('bagian.create') }}" class="btn btn-primary">
+                (+) Tambah Bagian
+            </a>
+        </div>
+        <div class="card-body">
+            @if($bagians->isEmpty())
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle"></i> Belum ada data bagian.
+                </div>
+            @else
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped" id="tabel">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Departemen</th>
+                                <th>Jumlah Peserta</th>
+                                <th>Jumlah Mentor</th>
+                                <th>Opsi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($bagians as $bagian)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $bagian->nama_bagian }}</td>
+                                    <td class="text-center">{{ $bagian->peserta_count }}</td>
+                                    <td class="text-center">{{ $bagian->mentor_count }}</td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ route('bagian.show', $bagian->id) }}"
+                                               class="btn btn-info btn-sm" title="Detail">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ route('bagian.edit', $bagian->id) }}"
+                                               class="btn btn-warning btn-sm" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-danger btn-sm"
+                                                    data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ $bagian->id }}"
+                                                    title="Hapus">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Modal Konfirmasi Hapus --}}
+                @foreach($bagians as $bagian)
+                    <div class="modal fade" id="confirmDeleteModal{{ $bagian->id }}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title" id="exampleModalLabel">Konfirmasi Penghapusan</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Apakah Anda yakin ingin menghapus bagian <strong>{{ $bagian->nama_bagian }}</strong>?</p>
+                                    <p class="text-muted">Data akan terhapus secara permanen dan tidak dapat dikembalikan.</p>
+                                    @if($bagian->peserta_count > 0 || $bagian->mentor_count > 0)
+                                        <div class="alert alert-warning">
+                                            <strong>Peringatan:</strong> Bagian ini masih memiliki {{ $bagian->peserta_count }} peserta dan {{ $bagian->mentor_count }} mentor yang terkait.
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <form action="{{ route('bagian.destroy', $bagian->id) }}" method="POST" style="display: inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger">Hapus</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 @endforeach
-            </tbody>
-        </table>
+            @endif
+        </div>
     </div>
 </div>
 @endsection
