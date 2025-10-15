@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <!-- [Head] start -->
-
+<!-- Bootstrap CSS -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <head>
   <title>Mamagang</title>
   <!-- [Meta] -->
@@ -23,8 +24,6 @@
 <!-- [ Sidebar Menu ] end --> <!-- [ Header Topbar ] start -->
 <x-header></x-header>
 <!-- [ Header ] end -->
-
-
 
   <!-- [ Main Content ] start -->
   <div class="pc-container">
@@ -54,8 +53,10 @@
 
     <script>
         $(document).ready( function () {
-
-            let table = new DataTable('#tabel');
+            // Initialize DataTable with minimal changes
+            if ($('#tabel').length) {
+                let table = new DataTable('#tabel');
+            }
 
             $("#success-alert").fadeTo(2000, 500).slideUp(500, function(){
             $("#success-alert").slideUp(500);
@@ -74,28 +75,18 @@
   <script src="{{ asset('template/dist') }}/assets/js/pcoded.js"></script>
   <script src="{{ asset('template/dist') }}/assets/js/plugins/feather.min.js"></script>
 
-
-
-
-
   <script>layout_change('light');</script>
-
-
-
-
   <script>change_box_container('false');</script>
-
-
-
   <script>layout_rtl_change('false');</script>
-
-
   <script>preset_change("preset-1");</script>
+  <script>font_change("poppins");</script>
 
+  <!-- Anti-flash script - sangat minimal -->
+  <script>
+    document.documentElement.classList.add('loaded');
+  </script>
 
-  <script>font_change("Public-Sans");</script>
-
-
+  @stack('scripts')
   @include('sweetalert::alert')
 </body>
 <!-- [Body] end -->

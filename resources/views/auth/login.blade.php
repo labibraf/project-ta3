@@ -8,9 +8,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="description" content="Mantis is made using Bootstrap 5 design framework. Download the free admin template & use it for your project.">
-  <meta name="keywords" content="Mantis, Dashboard UI Kit, Bootstrap 5, Admin Template, Admin Dashboard, CRM, CMS, Bootstrap Admin Template">
-  <meta name="author" content="CodedThemes">
+
 
   <!-- [Favicon] icon -->
   <link rel="icon" href="{{ asset('template/dist') }}/assets/images/favicon.svg" type="image/x-icon"> <!-- [Google Font] Family -->
@@ -68,41 +66,11 @@
                   <small class="text-danger">{{ $message }}></small>
              @enderror
             </div>
-            <div class="d-flex mt-1 justify-content-between">
-              <div class="form-check">
-                <input class="form-check-input input-primary" type="checkbox" id="customCheckc1" checked="">
-                <label class="form-check-label text-muted" for="customCheckc1">Keep me sign in</label>
-              </div>
-              <h5 class="text-secondary f-w-400">Forgot Password?</h5>
-            </div>
             <div class="d-grid mt-4">
               <button type="submit" class="btn btn-primary">Login</button>
             </div>
             <div class="saprator mt-3">
               <span>Login with</span>
-            </div>
-            <div class="row">
-              <div class="col-4">
-                <div class="d-grid">
-                  <button type="button" class="btn mt-2 btn-light-primary bg-light text-muted">
-                    <img src="{{ asset('template/dist') }}/assets/images/authentication/google.svg" alt="img"> <span class="d-none d-sm-inline-block"> Google</span>
-                  </button>
-                </div>
-              </div>
-              <div class="col-4">
-                <div class="d-grid">
-                  <button type="button" class="btn mt-2 btn-light-primary bg-light text-muted">
-                    <img src="{{ asset('template/dist') }}/assets/images/authentication/twitter.svg" alt="img"> <span class="d-none d-sm-inline-block"> Twitter</span>
-                  </button>
-                </div>
-              </div>
-              <div class="col-4">
-                <div class="d-grid">
-                  <button type="button" class="btn mt-2 btn-light-primary bg-light text-muted">
-                    <img src="{{ asset('template/dist') }}/assets/images/authentication/facebook.svg" alt="img"> <span class="d-none d-sm-inline-block"> Facebook</span>
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -110,7 +78,7 @@
         <div class="auth-footer row">
           <!-- <div class=""> -->
             <div class="col my-1">
-              <p class="m-0">Copyright © <a href="#">Codedthemes</a></p>
+              <p class="m-0"></p>
             </div>
             <div class="col-auto my-1">
               <ul class="list-inline footer-link mb-0">

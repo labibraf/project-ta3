@@ -6,13 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('pesertas', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('mentor_id')->nullable()->after('bagian_id');
+            $table->foreign('mentor_id')->references('id')->on('mentors')->onDelete('set null');
             $table->string('nama_lengkap');
             $table->string('email');
             $table->string('no_telepon');
@@ -30,9 +29,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('pesertas');

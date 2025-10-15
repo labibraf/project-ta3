@@ -21,6 +21,15 @@
 <link rel="stylesheet" href="{{ asset('template/dist') }}/assets/css/style.css" id="main-style-link" >
 <link rel="stylesheet" href="{{ asset('template/dist') }}/assets/css/style-preset.css" >
 <link rel="stylesheet" href="https://cdn.datatables.net/2.3.2/css/dataTables.dataTables.min.css">
+
+<!-- Anti-flash minimal - tidak mengubah tampilan -->
+<style>
+  html { visibility: hidden; }
+  html.loaded { visibility: visible; }
+</style>
+
+@stack('styles')
+
     <!-- Scripts -->
 @vite(['resources/js/app.js'])
 </div>
