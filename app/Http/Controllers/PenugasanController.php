@@ -189,6 +189,17 @@ class PenugasanController extends Controller
         // Simpan penugasan
         $penugasan = Penugasan::create($validatedData);
 
+        // Sync peserta ke pivot table untuk kategori Divisi
+        if (strtolower($request->kategori) === 'divisi') {
+            if ($request->has('select_all') && $request->select_all == '1') {
+                $bagianId = optional(Auth::user()->mentor)->bagian_id;
+                $pesertaIds = Peserta::where('bagian_id', $bagianId)->pluck('id')->toArray();
+                $penugasan->pesertasRelation()->sync($pesertaIds);
+            } else {
+                $penugasan->pesertasRelation()->sync($request->peserta_ids);
+            }
+        }
+
         Alert::success('Success', 'Penugasan berhasil ditambahkan.');
         return redirect()->route('penugasans.index');
     }
@@ -350,6 +361,17 @@ class PenugasanController extends Controller
 
         // 4. Update penugasan
         $penugasan->update($validatedData);
+
+        // Sync peserta ke pivot table untuk kategori Divisi
+        if ($request->kategori == 'Divisi') {
+            if ($request->has('select_all') && $request->select_all == '1') {
+                $bagianId = optional(Auth::user()->mentor)->bagian_id;
+                $pesertaIds = Peserta::where('bagian_id', $bagianId)->pluck('id')->toArray();
+                $penugasan->pesertasRelation()->sync($pesertaIds);
+            } else {
+                $penugasan->pesertasRelation()->sync($request->peserta_ids);
+            }
+        }
 
         // 5. Update bobot_tercapai peserta jika bobot berubah
         if ($bobotLama != $penugasan->beban_waktu) {

@@ -47,12 +47,20 @@ class Penugasan extends Model
         return $this->hasMany(LaporanHarian::class, 'penugasan_id', 'id');
     }
 
-    // Method pesertas() yang dibutuhkan untuk fix error - return collection
+    // Relasi many-to-many dengan Peserta melalui pivot table
+    public function pesertasRelation()
+    {
+        return $this->belongsToMany(Peserta::class, 'penugasan_peserta', 'penugasan_id', 'peserta_id')
+                    ->withTimestamps();
+    }
+
+    // Method pesertas() untuk mendapatkan collection peserta yang ditugaskan
     public function pesertas()
     {
-        // Untuk penugasan divisi, return semua peserta di bagian yang sama
-        if ($this->kategori === 'Divisi' && $this->bagian_id) {
-            return Peserta::where('bagian_id', $this->bagian_id)->get();
+        // Untuk penugasan divisi, return peserta yang sudah di-assign (dari pivot table)
+        if ($this->kategori === 'Divisi') {
+            // Gunakan property accessor untuk mendapatkan collection
+            return $this->pesertasRelation()->get();
         }
 
         // Untuk penugasan individu, return peserta yang ditugaskan dalam collection
@@ -63,31 +71,6 @@ class Penugasan extends Model
         // Return empty collection jika tidak ada kondisi yang terpenuhi
         return collect();
     }
-
-    // Method untuk mendapatkan query builder (jika dibutuhkan)
-    public function pesertasQuery()
-    {
-        // Untuk penugasan divisi, return query builder untuk peserta di bagian yang sama
-        if ($this->kategori === 'Divisi' && $this->bagian_id) {
-            return Peserta::where('bagian_id', $this->bagian_id);
-        }
-
-        // Untuk penugasan individu, return query builder untuk peserta yang ditugaskan
-        if ($this->kategori === 'Individu' && $this->peserta_id) {
-            return Peserta::where('id', $this->peserta_id);
-        }
-
-        // Return empty query builder jika tidak ada kondisi yang terpenuhi
-        return Peserta::whereRaw('1 = 0'); // Always returns empty result
-    }
-
-    // Method untuk mendapatkan collection peserta (alias untuk backward compatibility)
-    public function getPesertasCollection()
-    {
-        return $this->pesertas();
-    }
-
-
 
     // Accessor untuk Ditugaskan (untuk backward compatibility)
     public function getDitugaskanAttribute()
@@ -121,10 +104,10 @@ class Penugasan extends Model
                 $penugasan->peserta->updateWaktuTugasTercapai();
             }
 
-            // Update untuk penugasan divisi (multiple peserta)
-            if ($penugasan->kategori === 'Divisi' && $penugasan->bagian_id) {
-                $pesertasInBagian = \App\Models\Peserta::where('bagian_id', $penugasan->bagian_id)->get();
-                foreach ($pesertasInBagian as $peserta) {
+            // Update untuk penugasan divisi (peserta yang di-assign via pivot table)
+            if ($penugasan->kategori === 'Divisi') {
+                $pesertasAssigned = $penugasan->pesertasRelation;
+                foreach ($pesertasAssigned as $peserta) {
                     if (method_exists($peserta, 'updateWaktuTugasTercapai')) {
                         $peserta->updateWaktuTugasTercapai();
                     }
@@ -138,10 +121,10 @@ class Penugasan extends Model
                 $penugasan->peserta->updateWaktuTugasTercapai();
             }
 
-            // Update untuk penugasan divisi (multiple peserta)
-            if ($penugasan->kategori === 'Divisi' && $penugasan->bagian_id) {
-                $pesertasInBagian = \App\Models\Peserta::where('bagian_id', $penugasan->bagian_id)->get();
-                foreach ($pesertasInBagian as $peserta) {
+            // Update untuk penugasan divisi (peserta yang di-assign via pivot table)
+            if ($penugasan->kategori === 'Divisi') {
+                $pesertasAssigned = $penugasan->pesertasRelation;
+                foreach ($pesertasAssigned as $peserta) {
                     if (method_exists($peserta, 'updateWaktuTugasTercapai')) {
                         $peserta->updateWaktuTugasTercapai();
                     }
