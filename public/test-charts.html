@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Chart Debug</title>
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    </head>
+    <body>
+        <h1>Test Chart Rendering</h1>
+
+        <h2>1. Daily Activity Chart</h2>
+        <div id="test-daily-activity" style="height: 300px"></div>
+
+        <h2>2. Target Achievement Timeline</h2>
+        <div id="test-target-timeline" style="height: 300px"></div>
+
+        <h2>3. Mentor Performance</h2>
+        <div id="test-mentor-performance" style="height: 300px"></div>
+
+        <h2>4. Task Categories</h2>
+        <div id="test-task-categories" style="height: 300px"></div>
+
+        <script>
+            console.log("Testing ApexCharts...");
+
+            // Test 1: Daily Activity
+            const dailyOptions = {
+                series: [
+                    {
+                        name: "Laporan",
+                        data: [3, 0, 6, 0, 0, 2, 4, 1, 0, 3],
+                    },
+                ],
+                chart: {
+                    type: "area",
+                    height: 300,
+                },
+                colors: ["#5c92fe"],
+                xaxis: {
+                    categories: [
+                        "Day 1",
+                        "Day 2",
+                        "Day 3",
+                        "Day 4",
+                        "Day 5",
+                        "Day 6",
+                        "Day 7",
+                        "Day 8",
+                        "Day 9",
+                        "Day 10",
+                    ],
+                },
+            };
+            new ApexCharts(
+                document.querySelector("#test-daily-activity"),
+                dailyOptions,
+            ).render();
+            console.log("Daily Activity Chart rendered");
+
+            // Test 2: Target Timeline
+            const timelineOptions = {
+                series: [
+                    {
+                        name: "Progress",
+                        data: [100, 150, 200, 250, 300, 350],
+                    },
+                    {
+                        name: "Target",
+                        data: [120, 180, 240, 300, 360, 420],
+                    },
+                ],
+                chart: {
+                    type: "line",
+                    height: 300,
+                },
+                colors: ["#2dce89", "#5c92fe"],
+                xaxis: {
+                    categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+                },
+            };
+            new ApexCharts(
+                document.querySelector("#test-target-timeline"),
+                timelineOptions,
+            ).render();
+            console.log("Target Timeline Chart rendered");
+
+            // Test 3: Mentor Performance
+            const mentorOptions = {
+                series: [
+                    {
+                        name: "Total",
+                        data: [5, 2, 0],
+                    },
+                    {
+                        name: "Completed",
+                        data: [3, 1, 0],
+                    },
+                ],
+                chart: {
+                    type: "bar",
+                    height: 300,
+                },
+                colors: ["#5c92fe", "#2dce89"],
+                xaxis: {
+                    categories: ["Bukuran", "Charmender", "Delia"],
+                },
+            };
+            new ApexCharts(
+                document.querySelector("#test-mentor-performance"),
+                mentorOptions,
+            ).render();
+            console.log("Mentor Performance Chart rendered");
+
+            // Test 4: Task Categories
+            const taskOptions = {
+                series: [
+                    {
+                        name: "Total",
+                        data: [11, 2],
+                    },
+                    {
+                        name: "Selesai",
+                        data: [8, 1],
+                    },
+                ],
+                chart: {
+                    type: "bar",
+                    height: 300,
+                },
+                colors: ["#ffc107", "#2dce89"],
+                xaxis: {
+                    categories: ["Individu", "Divisi"],
+                },
+            };
+            new ApexCharts(
+                document.querySelector("#test-task-categories"),
+                taskOptions,
+            ).render();
+            console.log("Task Categories Chart rendered");
+
+            console.log("All test charts rendered successfully!");
+        </script>
+    </body>
+</html>

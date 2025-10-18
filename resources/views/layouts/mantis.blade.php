@@ -65,7 +65,10 @@
     </script>
   <!-- [Page Specific JS] start -->
   <script src="{{ asset('template/dist') }}/assets/js/plugins/apexcharts.min.js"></script>
-  <script src="{{ asset('template/dist') }}/assets/js/pages/dashboard-default.js"></script>
+  @if(!request()->routeIs('home'))
+    {{-- Only load dashboard-default.js if NOT on admin dashboard --}}
+    <script src="{{ asset('template/dist') }}/assets/js/pages/dashboard-default.js"></script>
+  @endif
   <!-- [Page Specific JS] end -->
   <!-- Required Js -->
   <script src="{{ asset('template/dist') }}/assets/js/plugins/popper.min.js"></script>

@@ -151,7 +151,7 @@
                         <label class="form-label mb-0">Pilih Peserta</label>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="selectAll" name="select_all" value="1"
-                                {{ (old('select_all', ($penugasan->getPesertasCollection()->count() == $pesertas->count() && $penugasan->kategori == 'Divisi') ? '1' : '0')) == '1' ? 'checked' : '' }}>
+                                {{ (old('select_all', ($penugasan->pesertas()->count() == $pesertas->count() && $penugasan->kategori == 'Divisi') ? '1' : '0')) == '1' ? 'checked' : '' }}>
                             <label class="form-check-label" for="selectAll">
                                 Pilih Semua
                             </label>
@@ -167,7 +167,7 @@
                                         value="{{ $item->id }}"
                                         id="peserta_{{ $item->id }}"
                                         data-target-waktu="{{ $item->getSisaWaktuMaksimalAttribute() }}"
-                                        {{ in_array($item->id, old('peserta_ids', $penugasan->getPesertasCollection()->pluck('id')->toArray())) ? 'checked' : '' }}>
+                                        {{ in_array($item->id, old('peserta_ids', $penugasan->pesertas()->pluck('id')->toArray())) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="peserta_{{ $item->id }}">
                                         {{ $item->user->name }} (Sisa: {{ $item->getSisaWaktuMaksimalAttribute() }} jam)
                                     </label>
