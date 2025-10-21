@@ -753,7 +753,291 @@ class DashboardController extends Controller
 
     public function pesertaDashboard()
     {
-        // Implementation for peserta dashboard
-        return view('dashboard.peserta');
+        $user = auth()->user();
+        $peserta = $user->peserta;
+
+        // Cek jika peserta tidak ditemukan
+        if (!$peserta) {
+            return redirect()->back()->with('error', 'Data peserta tidak ditemukan');
+        }
+
+        // ========== PRIORITAS 1: KARTU PROGRES UTAMA ==========
+
+        // 1. Progres Magang
+        $progressPercentage = $peserta->progress_percentage;
+        $targetWaktu = $peserta->target_method === 'sks' ? $peserta->target_bobot_tugas : $peserta->target_waktu_tugas;
+
+        // 2. Total Jam Tercapai
+        $totalJamTercapai = $peserta->waktu_tugas_tercapai;
+        $targetJam = $targetWaktu;
+
+        // 3. Sisa Hari Magang
+        $tanggalSelesai = \Carbon\Carbon::parse($peserta->tanggal_selesai_magang);
+        $sisaHari = now()->diffInDays($tanggalSelesai, false);
+        $sisaHari = $sisaHari > 0 ? $sisaHari : 0;
+
+        // 4. Tugas Aktif (belum selesai)
+        $tugasAktif = Penugasan::where(function($query) use ($peserta) {
+                $query->where('peserta_id', $peserta->id)
+                    ->orWhere(function($q) use ($peserta) {
+                        // Semua tugas divisi di bagian peserta
+                        $q->where('kategori', 'Divisi')
+                          ->where('bagian_id', $peserta->bagian_id)
+                          ->whereNull('peserta_id');
+                    });
+            })
+            ->whereIn('status_tugas', ['Belum Dimulai', 'Dikerjakan'])
+            ->count();
+
+        // 5. Status Laporan Akhir
+        $laporanAkhir = $peserta->laporanAkhir()->latest()->first();
+
+        if ($laporanAkhir) {
+            $statusLaporanAkhir = match($laporanAkhir->status) {
+                'terima' => 'Disetujui',
+                'tolak' => 'Perlu Revisi',
+                'pending' => 'Menunggu Review',
+                default => 'Belum Mengajukan'
+            };
+            $badgeClass = match($laporanAkhir->status) {
+                'terima' => 'bg-success',
+                'tolak' => 'bg-danger',
+                'pending' => 'bg-warning',
+                default => 'bg-secondary'
+            };
+        } else {
+            $statusLaporanAkhir = 'Belum Mengajukan';
+            $badgeClass = 'bg-secondary';
+        }
+
+        // ========== PRIORITAS 1: TABEL TUGAS ANDA ==========
+
+        // Ambil semua tugas yang relevan dengan peserta (individu + divisi)
+        $tugasSaya = Penugasan::where(function($query) use ($peserta) {
+                $query->where('peserta_id', $peserta->id)
+                    ->orWhere(function($q) use ($peserta) {
+                        // Semua tugas divisi di bagian peserta
+                        $q->where('kategori', 'Divisi')
+                          ->where('bagian_id', $peserta->bagian_id)
+                          ->whereNull('peserta_id');
+                    });
+            })
+            ->with(['mentor', 'bagian'])
+            ->orderByRaw("FIELD(status_tugas, 'Dikerjakan', 'Belum Dimulai', 'Selesai')")
+            ->orderBy('deadline', 'asc')
+            ->get();
+
+        // ========== PRIORITAS 1: INFO MENTOR & MAGANG ==========
+
+        $mentor = $peserta->mentor;
+        $bagian = $peserta->bagian;
+        $tanggalMulai = \Carbon\Carbon::parse($peserta->tanggal_mulai_magang);
+        $tanggalSelesaiFormatted = $tanggalSelesai->format('d M Y');
+        $tanggalMulaiFormatted = $tanggalMulai->format('d M Y');
+
+        // ========== PRIORITAS 2: VISUALISASI DATA (CHARTS) ==========
+
+        // 1. Chart: Distribusi Beban Kerja (Status Tugas)
+        $tugasSelesai = Penugasan::where(function($query) use ($peserta) {
+                $query->where('peserta_id', $peserta->id)
+                    ->orWhere(function($q) use ($peserta) {
+                        // Semua tugas divisi di bagian peserta
+                        $q->where('kategori', 'Divisi')
+                          ->where('bagian_id', $peserta->bagian_id)
+                          ->whereNull('peserta_id');
+                    });
+            })
+            ->where('status_tugas', 'Selesai')
+            ->where('is_approved', 1)
+            ->count();
+
+        $tugasDikerjakan = Penugasan::where(function($query) use ($peserta) {
+                $query->where('peserta_id', $peserta->id)
+                    ->orWhere(function($q) use ($peserta) {
+                        // Semua tugas divisi di bagian peserta
+                        $q->where('kategori', 'Divisi')
+                          ->where('bagian_id', $peserta->bagian_id)
+                          ->whereNull('peserta_id');
+                    });
+            })
+            ->where('status_tugas', 'Dikerjakan')
+            ->count();
+
+        $tugasBelumDimulai = Penugasan::where(function($query) use ($peserta) {
+                $query->where('peserta_id', $peserta->id)
+                    ->orWhere(function($q) use ($peserta) {
+                        // Semua tugas divisi di bagian peserta
+                        $q->where('kategori', 'Divisi')
+                          ->where('bagian_id', $peserta->bagian_id)
+                          ->whereNull('peserta_id');
+                    });
+            })
+            ->where('status_tugas', 'Belum Dimulai')
+            ->count();
+
+        // 2. Chart: Tren Aktivitas Harian (14 hari terakhir)
+        $trendAktivitas = [];
+        $trendLabels = [];
+
+        for ($i = 13; $i >= 0; $i--) {
+            $tanggal = now()->subDays($i);
+            $trendLabels[] = $tanggal->format('d M');
+
+            // Hitung jumlah laporan harian pada tanggal tersebut
+            $jumlahLaporan = \App\Models\LaporanHarian::where('peserta_id', $peserta->id)
+                ->whereDate('created_at', $tanggal->format('Y-m-d'))
+                ->count();
+
+            $trendAktivitas[] = $jumlahLaporan;
+        }
+
+        // 3. Tabel: Log Laporan Harian Terbaru
+        $laporanHarianTerbaru = \App\Models\LaporanHarian::where('peserta_id', $peserta->id)
+            ->with(['penugasan'])
+            ->orderBy('created_at', 'desc')
+            ->take(7)
+            ->get();
+
+        // ========== PRIORITAS 3: RIWAYAT & INFORMASI TAMBAHAN ==========
+
+        // 1. Tabel: Riwayat Tugas Selesai (dengan feedback/nilai)
+        $riwayatTugasSelesai = Penugasan::where(function($query) use ($peserta) {
+                $query->where('peserta_id', $peserta->id)
+                    ->orWhere(function($q) use ($peserta) {
+                        // Semua tugas divisi di bagian peserta
+                        $q->where('kategori', 'Divisi')
+                          ->where('bagian_id', $peserta->bagian_id)
+                          ->whereNull('peserta_id');
+                    });
+            })
+            ->where('status_tugas', 'Selesai')
+            ->where('is_approved', 1)
+            ->with(['mentor', 'bagian'])
+            ->orderBy('updated_at', 'desc')
+            ->take(10)
+            ->get();
+
+        // 2. Pengumuman/Notifikasi (simulasi - bisa diganti dengan tabel notification)
+        // Untuk saat ini kita ambil dari laporan akhir yang perlu revisi atau tugas dengan catatan
+        $notifikasi = [];
+
+        // Notifikasi dari Laporan Akhir yang ditolak
+        $laporanAkhirTolak = $peserta->laporanAkhir()
+            ->where('status', 'tolak')
+            ->latest()
+            ->first();
+
+        if ($laporanAkhirTolak && $laporanAkhirTolak->catatan) {
+            $notifikasi[] = [
+                'type' => 'danger',
+                'icon' => 'ti-alert-circle',
+                'title' => 'Laporan Akhir Perlu Revisi',
+                'message' => $laporanAkhirTolak->catatan,
+                'date' => $laporanAkhirTolak->updated_at,
+                'action_url' => route('laporan-akhir.index'),
+                'action_text' => 'Lihat & Revisi'
+            ];
+        }
+
+        // Notifikasi dari tugas dengan feedback
+        $tugasDenganFeedback = Penugasan::where('peserta_id', $peserta->id)
+            ->where('is_approved', 1)
+            ->whereNotNull('feedback')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if ($tugasDenganFeedback) {
+            $notifikasi[] = [
+                'type' => 'info',
+                'icon' => 'ti-message-circle',
+                'title' => 'Feedback dari Mentor',
+                'message' => 'Mentor memberikan feedback untuk tugas "' . Str::limit($tugasDenganFeedback->judul_tugas, 40) . '"',
+                'date' => $tugasDenganFeedback->updated_at,
+                'action_url' => route('penugasans.show', $tugasDenganFeedback->id),
+                'action_text' => 'Lihat Feedback'
+            ];
+        }
+
+        // Notifikasi progres (jika sudah mencapai milestone tertentu)
+        if ($progressPercentage >= 75 && $progressPercentage < 100) {
+            $notifikasi[] = [
+                'type' => 'success',
+                'icon' => 'ti-trophy',
+                'title' => 'Hampir Selesai!',
+                'message' => 'Progres Anda sudah mencapai ' . number_format($progressPercentage, 1) . '%! Pertahankan semangat Anda!',
+                'date' => now(),
+                'action_url' => null,
+                'action_text' => null
+            ];
+        } elseif ($progressPercentage >= 50 && $progressPercentage < 75) {
+            $notifikasi[] = [
+                'type' => 'warning',
+                'icon' => 'ti-star',
+                'title' => 'Setengah Perjalanan',
+                'message' => 'Anda sudah menyelesaikan lebih dari setengah target. Terus semangat!',
+                'date' => now(),
+                'action_url' => null,
+                'action_text' => null
+            ];
+        }
+
+        // Notifikasi deadline mendekat
+        $tugasDeadlineMendekat = Penugasan::where(function($query) use ($peserta) {
+                $query->where('peserta_id', $peserta->id)
+                    ->orWhere(function($q) use ($peserta) {
+                        // Semua tugas divisi di bagian peserta
+                        $q->where('kategori', 'Divisi')
+                          ->where('bagian_id', $peserta->bagian_id)
+                          ->whereNull('peserta_id');
+                    });
+            })
+            ->where('status_tugas', '!=', 'Selesai')
+            ->whereBetween('deadline', [now(), now()->addDays(3)])
+            ->count();
+
+        if ($tugasDeadlineMendekat > 0) {
+            $notifikasi[] = [
+                'type' => 'warning',
+                'icon' => 'ti-clock-alert',
+                'title' => 'Deadline Mendekat',
+                'message' => 'Anda memiliki ' . $tugasDeadlineMendekat . ' tugas dengan deadline dalam 3 hari ke depan.',
+                'date' => now(),
+                'action_url' => route('penugasans.index'),
+                'action_text' => 'Lihat Tugas'
+            ];
+        }
+
+        return view('dashboard.peserta', compact(
+            // Progres Utama
+            'progressPercentage',
+            'totalJamTercapai',
+            'targetJam',
+            'sisaHari',
+            'tugasAktif',
+            'statusLaporanAkhir',
+            'badgeClass',
+
+            // Tabel Tugas
+            'tugasSaya',
+
+            // Info Mentor & Magang
+            'mentor',
+            'bagian',
+            'tanggalMulaiFormatted',
+            'tanggalSelesaiFormatted',
+            'peserta',
+
+            // Charts (Prioritas 2)
+            'tugasSelesai',
+            'tugasDikerjakan',
+            'tugasBelumDimulai',
+            'trendAktivitas',
+            'trendLabels',
+            'laporanHarianTerbaru',
+
+            // Prioritas 3
+            'riwayatTugasSelesai',
+            'notifikasi'
+        ));
     }
 }
