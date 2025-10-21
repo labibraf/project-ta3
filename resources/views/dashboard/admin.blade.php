@@ -447,15 +447,19 @@
                 </div>
                 <div class="card-body">
                     <div id="laporan-akhir-chart" style="height: 250px;"></div>
-                    <div class="mt-3 text-center">
+                    <div class="mt-4 text-center">
                         <div class="row">
-                            <div class="col-6">
+                            <div class="col-4">
                                 <h6 class="mb-1 text-success">{{ $laporanAkhirSelesai }}</h6>
                                 <small class="text-muted">Selesai</small>
                             </div>
-                            <div class="col-6">
+                            <div class="col-4">
                                 <h6 class="mb-1 text-warning">{{ $laporanAkhirBelum }}</h6>
                                 <small class="text-muted">Belum</small>
+                            </div>
+                            <div class="col-4">
+                                <h6 class="mb-1 text-warning">{{ $laporanAkhirTolak }}</h6>
+                                <small class="text-muted">Ditolak</small>
                             </div>
                         </div>
                     </div>
@@ -1101,7 +1105,7 @@
                             <div class="alert alert-primary" role="alert">
                                 <h6 class="alert-heading"><i class="ti ti-trending-up"></i> Peningkatan Partisipasi</h6>
                                 @if($pesertaBaru > $pesertaMahir)
-                                <p class="mb-0">Terdapat <strong>{{ $pesertaBaru }}</strong> peserta baru. Pertimbangkan untuk memberikan mentoring intensif atau pelatihan tambahan.</p>
+                                <p class="mb-0">Terdapat <strong>{{ $pesertaBaru }}</strong> peserta . Pertimbangkan untuk memberikan mentoring intensif atau pelatihan tambahan.</p>
                                 @else
                                 <p class="mb-0">Distribusi progress peserta cukup baik. Pertahankan kualitas pembimbingan saat ini.</p>
                                 @endif
@@ -1312,16 +1316,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Laporan Akhir Chart
     const laporanAkhirOptions = {
-        series: [{{ $laporanAkhirSelesai }}, {{ $laporanAkhirBelum }}],
+        series: [{{ $laporanAkhirSelesai }}, {{ $laporanAkhirBelum }}, {{ $laporanAkhirTolak }}],
         chart: {
             type: 'pie',
             height: 250
         },
-        colors: ['#2dce89', '#ffc107'],
-        labels: ['Selesai', 'Belum Selesai'],
+        colors: ['#2dce89', '#ffc107', '#dc3545'],
+        labels: ['Selesai', 'Belum Selesai', 'Ditolak'],
         legend: {
             position: 'bottom',
-            fontSize: '11px'
+            fontSize: '12px'
         },
         dataLabels: {
             enabled: true,
