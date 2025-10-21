@@ -27,8 +27,31 @@ class LaporanAkhirController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+
+        // Untuk peserta, cek status dan kirim ke view
+        $bisaLaporanAkhir = true;
+        $pesertaData = null;
+        $alasanTidakBisa = null;
+
         if ($user->isPeserta()) {
-            $this->checkPesertaBisaLaporanAkhir();
+            $pesertaData = $user->peserta;
+            $bisaLaporanAkhir = $pesertaData->bisa_laporan_akhir;
+
+            if (!$bisaLaporanAkhir) {
+                // Hitung informasi progress untuk ditampilkan
+                $targetWaktu = $pesertaData->target_method === 'sks'
+                    ? $pesertaData->target_bobot_tugas
+                    : $pesertaData->target_waktu_tugas;
+                $waktuTercapai = $pesertaData->waktu_tugas_tercapai;
+                $sisaWaktu = $targetWaktu - $waktuTercapai;
+
+                $alasanTidakBisa = [
+                    'target' => $targetWaktu,
+                    'tercapai' => $waktuTercapai,
+                    'sisa' => $sisaWaktu,
+                    'progress' => $pesertaData->progress_percentage
+                ];
+            }
         }
 
         $laporanAkhir = collect();
@@ -51,7 +74,7 @@ class LaporanAkhirController extends Controller
                 ->get();
         }
 
-        return view('laporan_akhir.index', compact('laporanAkhir'));
+        return view('laporan_akhir.index', compact('laporanAkhir', 'bisaLaporanAkhir', 'pesertaData', 'alasanTidakBisa'));
     }
 
     public function create()
