@@ -77,7 +77,7 @@ class PenugasanController extends Controller
                 ->get();
         }
 
-        return view('penugasan.index', compact('penugasans'));
+        return view('Penugasan.index', compact('penugasans'));
     }
 
     public function create()
@@ -89,7 +89,7 @@ class PenugasanController extends Controller
             ->orderBy('id')
             ->get();
 
-        return view('penugasan.create', compact('peserta'));
+        return view('Penugasan.create', compact('peserta'));
     }
 
     public function store(Request $request)
@@ -240,7 +240,7 @@ class PenugasanController extends Controller
             abort(403, 'AKSES DITOLAK: ANDA TIDAK MEMILIKI HAK AKSES.');
         }
 
-        return view('penugasan.edit', compact('penugasan', 'pesertas'));
+        return view('Penugasan.edit', compact('penugasan', 'pesertas'));
     }
 
     public function update(Request $request, Penugasan $penugasan)
@@ -537,7 +537,7 @@ class PenugasanController extends Controller
             $currentProgress = $latestLaporan ? $latestLaporan->progres_tugas : 0;
         }
 
-        return view('penugasan.show', compact('penugasan', 'laporanHarians', 'currentProgress', 'latestLaporan'));
+        return view('Penugasan.show', compact('penugasan', 'laporanHarians', 'currentProgress', 'latestLaporan'));
     }
 
     public function destroy(Penugasan $penugasan)

@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Penugasan;
 use App\Models\Laporan;
 use App\Models\LaporanAkhir;
+use App\Models\LaporanHarian;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -151,11 +152,15 @@ class DashboardController extends Controller
         // Total working hours across all peserta
         $totalJamMagang = Peserta::sum('waktu_tugas_tercapai') ?? 0;
 
-        // Laporan Akhir Statistics - Hanya yang statusnya 'terima'
+        // Laporan Akhir Statistics
+        $totalLaporanAkhir = LaporanAkhir::count(); // Total semua laporan akhir
         $laporanAkhirSelesai = (clone $pesertaQuery)->whereHas('laporanAkhir', function($q) {
             $q->where('status', 'terima');
         })->count();
-        $laporanAkhirBelum = $totalPeserta - $laporanAkhirSelesai;
+        $laporanAkhirTolak = (clone $pesertaQuery)->whereHas('laporanAkhir', function($q) {
+            $q->where('status', 'tolak');
+        })->count();
+        $laporanAkhirBelum = $totalLaporanAkhir - $laporanAkhirSelesai - $laporanAkhirTolak; // Total laporan - selesai - tolak
 
         // Task Completion Statistics
         $totalTugas = Penugasan::count();
@@ -417,7 +422,7 @@ class DashboardController extends Controller
             'recentPeserta', 'bagianDistribution',
             'monthlyTrend', 'totalJamMagang',
             // Pie Chart Data
-            'laporanAkhirSelesai', 'laporanAkhirBelum',
+            'totalLaporanAkhir', 'laporanAkhirSelesai','laporanAkhirTolak', 'laporanAkhirBelum',
             'totalTugas', 'tugasSelesai', 'tugasBerjalan', 'tugasBelumDimulai',
             'pesertaTargetTercapai', 'pesertaTargetBelum',
             'pesertaLakiLaki', 'pesertaPerempuan',
@@ -445,8 +450,305 @@ class DashboardController extends Controller
 
     public function mentorDashboard()
     {
-        // Implementation for mentor dashboard
-        return view('dashboard.mentor');
+        if (!Auth::user()->mentor) {
+            return redirect()->route('home')->with('error', 'Data mentor tidak ditemukan.');
+        }
+
+        $mentorId = Auth::user()->mentor->id;
+
+        $totalPesertaBimbingan = Peserta::where('mentor_id', $mentorId)->count();
+        $pesertaLulus = Peserta::where('mentor_id', $mentorId)
+            ->whereHas('laporanAkhir', function($q) {
+                $q->where('status', 'terima');
+            })->count();
+        $pesertaAktif = Peserta::where('mentor_id', $mentorId)
+            ->whereDoesntHave('laporanAkhir', function($q) {
+                $q->where('status', 'terima');
+            })->count();
+
+        $tugasPerluReview = Penugasan::where('is_approved', 0)
+            ->where('status_tugas', 'Selesai')
+            ->where(function($query) use ($mentorId) {
+                $query->where(function($q) use ($mentorId) {
+                    // Tugas individu untuk peserta yang dibimbing mentor
+                    $q->where('kategori', 'Individu')
+                      ->whereHas('peserta', function($subQ) use ($mentorId) {
+                          $subQ->where('mentor_id', $mentorId);
+                      });
+                })->orWhere(function($q) use ($mentorId) {
+                    // Tugas divisi yang dibuat oleh mentor
+                    $q->where('kategori', 'Divisi')
+                      ->where('mentor_id', $mentorId);
+                });
+            })->count();
+
+        // Hitung total tugas (individu + divisi) untuk mentor
+        $totalTugas = Penugasan::where(function($query) use ($mentorId) {
+            $query->where(function($q) use ($mentorId) {
+                // Tugas individu untuk peserta yang dibimbing mentor
+                $q->where('kategori', 'Individu')
+                  ->whereHas('peserta', function($subQ) use ($mentorId) {
+                      $subQ->where('mentor_id', $mentorId);
+                  });
+            })->orWhere(function($q) use ($mentorId) {
+                // Tugas divisi yang dibuat oleh mentor
+                $q->where('kategori', 'Divisi')
+                  ->where('mentor_id', $mentorId);
+            });
+        })->count();
+
+        $tugasSelesai = Penugasan::where('status_tugas', 'Selesai')
+            ->where(function($query) use ($mentorId) {
+                $query->where(function($q) use ($mentorId) {
+                    // Tugas individu untuk peserta yang dibimbing mentor
+                    $q->where('kategori', 'Individu')
+                      ->whereHas('peserta', function($subQ) use ($mentorId) {
+                          $subQ->where('mentor_id', $mentorId);
+                      });
+                })->orWhere(function($q) use ($mentorId) {
+                    // Tugas divisi yang dibuat oleh mentor
+                    $q->where('kategori', 'Divisi')
+                      ->where('mentor_id', $mentorId);
+                });
+            })->count();
+
+        $tugasAktif = Penugasan::where('status_tugas', 'Dikerjakan')
+            ->where(function($query) use ($mentorId) {
+                $query->where(function($q) use ($mentorId) {
+                    // Tugas individu untuk peserta yang dibimbing mentor
+                    $q->where('kategori', 'Individu')
+                      ->whereHas('peserta', function($subQ) use ($mentorId) {
+                          $subQ->where('mentor_id', $mentorId);
+                      });
+                })->orWhere(function($q) use ($mentorId) {
+                    // Tugas divisi yang dibuat oleh mentor
+                    $q->where('kategori', 'Divisi')
+                      ->where('mentor_id', $mentorId);
+                });
+            })->count();
+
+        $reviewLaporanAkhir = LaporanAkhir::whereHas('peserta', function($q) use ($mentorId) {
+            $q->where('mentor_id', $mentorId);
+        })
+        ->where('status', 'Selesai')
+        ->count();
+        $tugasAktif = Penugasan::whereHas('peserta', function($q) use ($mentorId) {
+            $q->where('mentor_id', $mentorId);
+        })
+        ->where('status_tugas', 'Dikerjakan')
+        ->count();
+
+        $reviewLaporanAkhir = LaporanAkhir::whereHas('peserta', function($q) use ($mentorId) {
+            $q->where('mentor_id', $mentorId);
+        })
+        ->where('status', 'draft')
+        ->count();
+        $totalLaporanAkhir = LaporanAkhir::whereHas('peserta', function($q) use ($mentorId) {
+            $q->where('mentor_id', $mentorId);
+        })->count();
+
+        // Peserta Performa Rendah (progress < 25%) - Hanya Peserta Aktif
+        // Note: target_method = 'sks' atau 'manual'
+        // sks = SKS tercapai, target_waktu_tugas = target, waktu_tugas_tercapai = waktu tercapai
+        $pesertaPerformaRendah = Peserta::where('mentor_id', $mentorId)
+            ->whereDoesntHave('laporanAkhir', function($q) {
+                $q->where('status', 'terima');
+            })
+            ->whereRaw('(
+                CASE
+                    WHEN target_method = "sks" THEN
+                        CASE WHEN target_waktu_tugas > 0 THEN (sks / target_waktu_tugas * 100) ELSE 0 END
+                    ELSE
+                        CASE WHEN target_waktu_tugas > 0 THEN (waktu_tugas_tercapai / target_waktu_tugas * 100) ELSE 0 END
+                END
+            ) < 25')
+            ->count();
+
+        // Tugas Terlambat (deadline sudah lewat tapi status bukan Selesai)
+        $tugasTerlambat = Penugasan::where('deadline', '<', now())
+            ->where('status_tugas', '!=', 'Selesai')
+            ->where(function($query) use ($mentorId) {
+                $query->where(function($q) use ($mentorId) {
+                    // Tugas individu untuk peserta yang dibimbing mentor
+                    $q->where('kategori', 'Individu')
+                      ->whereHas('peserta', function($subQ) use ($mentorId) {
+                          $subQ->where('mentor_id', $mentorId);
+                      });
+                })->orWhere(function($q) use ($mentorId) {
+                    // Tugas divisi yang dibuat oleh mentor
+                    $q->where('kategori', 'Divisi')
+                      ->where('mentor_id', $mentorId);
+                });
+            })->count();
+
+        // PRIORITAS 1: Data Tabel Menunggu Persetujuan
+        $tugasMenungguApproval = Penugasan::with(['peserta', 'bagian'])
+            ->where('is_approved', 0)
+            ->where('status_tugas', 'Selesai')
+            ->where(function($query) use ($mentorId) {
+                $query->where(function($q) use ($mentorId) {
+                    // Tugas individu untuk peserta yang dibimbing mentor
+                    $q->where('kategori', 'Individu')
+                      ->whereHas('peserta', function($subQ) use ($mentorId) {
+                          $subQ->where('mentor_id', $mentorId);
+                      });
+                })->orWhere(function($q) use ($mentorId) {
+                    // Tugas divisi yang dibuat oleh mentor
+                    $q->where('kategori', 'Divisi')
+                      ->where('mentor_id', $mentorId);
+                });
+            })
+            ->orderBy('updated_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        // PRIORITAS 1: Data Tabel Progres Peserta Bimbingan (Hanya Peserta Aktif)
+        $pesertaBimbingan = Peserta::where('mentor_id', $mentorId)
+            ->whereDoesntHave('laporanAkhir', function($q) {
+                $q->where('status', 'terima');
+            })
+            ->withCount(['penugasan'])
+            ->get()
+            ->map(function($peserta) {
+                // Hitung progress percentage
+                // target_method = 'sks' atau 'manual'
+                if ($peserta->target_method === 'sks') {
+                    $peserta->progress_percentage = $peserta->target_waktu_tugas > 0
+                        ? ($peserta->sks / $peserta->target_waktu_tugas * 100)
+                        : 0;
+                } else {
+                    $peserta->progress_percentage = $peserta->target_waktu_tugas > 0
+                        ? ($peserta->waktu_tugas_tercapai / $peserta->target_waktu_tugas * 100)
+                        : 0;
+                }
+                return $peserta;
+            })
+            ->sortByDesc('progress_percentage');
+
+        // PRIORITAS 2: Data untuk Chart Distribusi Progress Peserta (Hanya Peserta Aktif)
+        $pesertaPemula = Peserta::where('mentor_id', $mentorId)
+            ->whereDoesntHave('laporanAkhir', function($q) {
+                $q->where('status', 'terima');
+            })
+            ->whereRaw('(
+                CASE
+                    WHEN target_method = "sks" THEN
+                        CASE WHEN target_waktu_tugas > 0 THEN (sks / target_waktu_tugas * 100) ELSE 0 END
+                    ELSE
+                        CASE WHEN target_waktu_tugas > 0 THEN (waktu_tugas_tercapai / target_waktu_tugas * 100) ELSE 0 END
+                END
+            ) < 25')
+            ->count();
+
+        $pesertaMenengah = Peserta::where('mentor_id', $mentorId)
+            ->whereDoesntHave('laporanAkhir', function($q) {
+                $q->where('status', 'terima');
+            })
+            ->whereRaw('(
+                CASE
+                    WHEN target_method = "sks" THEN
+                        CASE WHEN target_waktu_tugas > 0 THEN (sks / target_waktu_tugas * 100) ELSE 0 END
+                    ELSE
+                        CASE WHEN target_waktu_tugas > 0 THEN (waktu_tugas_tercapai / target_waktu_tugas * 100) ELSE 0 END
+                END
+            ) BETWEEN 25 AND 75')
+            ->count();
+
+        $pesertaMahir = Peserta::where('mentor_id', $mentorId)
+            ->whereDoesntHave('laporanAkhir', function($q) {
+                $q->where('status', 'terima');
+            })
+            ->whereRaw('(
+                CASE
+                    WHEN target_method = "sks" THEN
+                        CASE WHEN target_waktu_tugas > 0 THEN (sks / target_waktu_tugas * 100) ELSE 0 END
+                    ELSE
+                        CASE WHEN target_waktu_tugas > 0 THEN (waktu_tugas_tercapai / target_waktu_tugas * 100) ELSE 0 END
+                END
+            ) > 75')
+            ->count();
+
+        // PRIORITAS 2: Data untuk Chart Status Penugasan
+        $tugasSelesai = Penugasan::where('status_tugas', 'Selesai')
+            ->where(function($query) use ($mentorId) {
+                $query->where(function($q) use ($mentorId) {
+                    // Tugas individu untuk peserta yang dibimbing mentor
+                    $q->where('kategori', 'Individu')
+                      ->whereHas('peserta', function($subQ) use ($mentorId) {
+                          $subQ->where('mentor_id', $mentorId);
+                      });
+                })->orWhere(function($q) use ($mentorId) {
+                    // Tugas divisi yang dibuat oleh mentor
+                    $q->where('kategori', 'Divisi')
+                      ->where('mentor_id', $mentorId);
+                });
+            })->count();
+
+        $tugasDikerjakan = Penugasan::where('status_tugas', 'Dikerjakan')
+            ->where(function($query) use ($mentorId) {
+                $query->where(function($q) use ($mentorId) {
+                    // Tugas individu untuk peserta yang dibimbing mentor
+                    $q->where('kategori', 'Individu')
+                      ->whereHas('peserta', function($subQ) use ($mentorId) {
+                          $subQ->where('mentor_id', $mentorId);
+                      });
+                })->orWhere(function($q) use ($mentorId) {
+                    // Tugas divisi yang dibuat oleh mentor
+                    $q->where('kategori', 'Divisi')
+                      ->where('mentor_id', $mentorId);
+                });
+            })->count();
+
+        $tugasBelumDimulai = Penugasan::where('status_tugas', 'Belum')
+            ->where(function($query) use ($mentorId) {
+                $query->where(function($q) use ($mentorId) {
+                    // Tugas individu untuk peserta yang dibimbing mentor
+                    $q->where('kategori', 'Individu')
+                      ->whereHas('peserta', function($subQ) use ($mentorId) {
+                          $subQ->where('mentor_id', $mentorId);
+                      });
+                })->orWhere(function($q) use ($mentorId) {
+                    // Tugas divisi yang dibuat oleh mentor
+                    $q->where('kategori', 'Divisi')
+                      ->where('mentor_id', $mentorId);
+                });
+            })->count();
+
+        // PRIORITAS 2: Data Tabel Log Laporan Harian Terbaru
+        $laporanHarianTerbaru = LaporanHarian::with(['peserta', 'penugasan'])
+            ->whereHas('peserta', function($q) use ($mentorId) {
+                $q->where('mentor_id', $mentorId);
+            })
+            ->whereNotNull('penugasan_id') // Hanya ambil yang memiliki penugasan terkait
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('dashboard.mentor', compact(
+            // Prioritas 1: Kartu Statistik
+            'totalPesertaBimbingan',
+            'tugasPerluReview',
+            'pesertaLulus',
+            'pesertaAktif',
+            'reviewLaporanAkhir',
+            'totalLaporanAkhir',
+            'pesertaPerformaRendah',
+            'tugasTerlambat',
+            'tugasSelesai',
+            'tugasAktif',
+            'totalTugas',
+            // Prioritas 1: Tabel
+            'tugasMenungguApproval',
+            'pesertaBimbingan',
+            // Prioritas 2: Chart Data
+            'pesertaPemula',
+            'pesertaMenengah',
+            'pesertaMahir',
+            'tugasDikerjakan',
+            'tugasBelumDimulai',
+            // Prioritas 2: Tabel
+            'laporanHarianTerbaru'
+        ));
     }
 
     public function pesertaDashboard()

@@ -59,6 +59,35 @@ class LaporanHarianController extends Controller
         return view('laporan_harian.index', compact('laporanHarian'));
     }
 
+    public function show($id)
+    {
+        // Cari laporan harian berdasarkan ID
+        $laporanHarian = LaporanHarian::findOrFail($id);
+
+        // Cek apakah user memiliki akses
+        $user = Auth::user();
+
+        if ($user->isPeserta()) {
+            // Peserta hanya bisa melihat laporan miliknya sendiri
+            if ($laporanHarian->peserta_id !== $user->peserta->id) {
+                abort(403, 'AKSES DITOLAK: Anda tidak memiliki akses ke laporan ini.');
+            }
+        } elseif ($user->isMentor()) {
+            // Mentor hanya bisa melihat laporan dari peserta bimbingannya
+            if ($laporanHarian->peserta->mentor_id !== $user->mentor->id) {
+                abort(403, 'AKSES DITOLAK: Anda tidak memiliki akses ke laporan ini.');
+            }
+        }
+
+        // Redirect ke detail penugasan terkait jika ada
+        if ($laporanHarian->penugasan_id) {
+            return redirect()->route('penugasans.show', $laporanHarian->penugasan_id);
+        }
+
+        // Jika tidak ada penugasan terkait, redirect ke index dengan pesan
+        Alert::info('Info', 'Laporan harian ini tidak terkait dengan penugasan tertentu.');
+        return redirect()->route('laporan_harian.index');
+    }
 
     public function create($penugasan_id = null)
     {
