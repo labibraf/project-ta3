@@ -33,6 +33,12 @@ class DashboardController extends Controller
 
     public function adminDashboard(Request $request)
     {
+        // Update waktu_tugas_tercapai for all peserta to include division tasks
+        $allPeserta = Peserta::all();
+        foreach ($allPeserta as $peserta) {
+            $peserta->updateWaktuTugasTercapai();
+        }
+
         // Get filter parameters
         $tahun = $request->input('tahun');
         $bulan = $request->input('bulan');
@@ -456,6 +462,12 @@ class DashboardController extends Controller
 
         $mentorId = Auth::user()->mentor->id;
 
+        // Update waktu_tugas_tercapai for all peserta under this mentor to include division tasks
+        $pesertaBimbingan = Peserta::where('mentor_id', $mentorId)->get();
+        foreach ($pesertaBimbingan as $peserta) {
+            $peserta->updateWaktuTugasTercapai();
+        }
+
         $totalPesertaBimbingan = Peserta::where('mentor_id', $mentorId)->count();
         $pesertaLulus = Peserta::where('mentor_id', $mentorId)
             ->whereHas('laporanAkhir', function($q) {
@@ -721,7 +733,7 @@ class DashboardController extends Controller
             })
             ->whereNotNull('penugasan_id') // Hanya ambil yang memiliki penugasan terkait
             ->orderBy('created_at', 'desc')
-            ->limit(10)
+            ->limit(5)
             ->get();
 
         return view('dashboard.mentor', compact(
@@ -768,13 +780,28 @@ class DashboardController extends Controller
         $targetWaktu = $peserta->target_method === 'sks' ? $peserta->target_bobot_tugas : $peserta->target_waktu_tugas;
 
         // 2. Total Jam Tercapai
-        $totalJamTercapai = $peserta->waktu_tugas_tercapai;
+        // Update waktu tugas tercapai terlebih dahulu untuk memastikan data terbaru
+        $totalJamTercapai = $peserta->updateWaktuTugasTercapai();
         $targetJam = $targetWaktu;
 
         // 3. Sisa Hari Magang
         $tanggalSelesai = \Carbon\Carbon::parse($peserta->tanggal_selesai_magang);
-        $sisaHari = now()->diffInDays($tanggalSelesai, false);
-        $sisaHari = $sisaHari > 0 ? $sisaHari : 0;
+
+        if ($tanggalSelesai->isFuture()) {
+            $interval = now()->diff($tanggalSelesai);
+            $bulan = $interval->m + ($interval->y * 12);
+            $hari = $interval->d;
+
+            if ($bulan > 0 && $hari > 0) {
+                $sisaWaktu = "$bulan Bulan $hari Hari";
+            } elseif ($bulan > 0) {
+                $sisaWaktu = "$bulan Bulan";
+            } else {
+                $sisaWaktu = "$hari Hari";
+            }
+        } else {
+            $sisaWaktu = "Selesai";
+        }
 
         // 4. Tugas Aktif (belum selesai)
         $tugasAktif = Penugasan::where(function($query) use ($peserta) {
@@ -1012,8 +1039,8 @@ class DashboardController extends Controller
             'progressPercentage',
             'totalJamTercapai',
             'targetJam',
-            'sisaHari',
             'tugasAktif',
+            'sisaWaktu',
             'statusLaporanAkhir',
             'badgeClass',
 

@@ -12,6 +12,7 @@ use App\Http\Controllers\LaporanHarianController;
 use App\Http\Controllers\PenugasanController;
 use App\Http\Controllers\LaporanAkhirController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\RepositoryController;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -63,6 +64,16 @@ Route::resource('laporan-akhir', LaporanAkhirController::class);
 Route::patch('/laporan-akhir/{laporanAkhir}/status', [LaporanAkhirController::class, 'updateStatus'])
     ->name('laporan-akhir.updateStatus');
 
+// Repository
+// Route resource untuk CRUD utama
+Route::resource('repository', RepositoryController::class);
+// Route tambahan untuk publish/unpublish (hanya untuk admin)
+Route::post('/repository/{id}/publish', [RepositoryController::class, 'publish'])
+    ->name('repository.publish')
+    ->middleware('isAdmin');
+Route::post('/repository/{id}/unpublish', [RepositoryController::class, 'unpublish'])
+    ->name('repository.unpublish')
+    ->middleware('isAdmin');
 
 // users
 Route::resource('users', UserController::class)->middleware('isAdmin');

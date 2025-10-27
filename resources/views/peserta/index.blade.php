@@ -45,7 +45,7 @@
                                         {{ \Carbon\Carbon::parse($item->tanggal_selesai_magang)->format('d M Y') }}
                                         <br>
                                         <small class="text-muted">
-                                            ({{ \Carbon\Carbon::parse($item->tanggal_mulai_magang)->diffInDays($item->tanggal_selesai_magang) }} hari)
+                                            ({{ $item->durasi_hari_kerja }} hari kerja)
                                         </small>
                                     </td>
                                     <td class="text-center">

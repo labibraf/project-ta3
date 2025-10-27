@@ -18,10 +18,10 @@
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
                             <h3 class="text-white m-0 mb-1">{{ number_format($progressPercentage, 1) }}%</h3>
-                            <p class="mb-0 text-white-50 small">Progres Magang Anda</p>
+                            <p class="mb-0 text-white-50">Progres Magang Anda</p>
                         </div>
                         <div class="avtar avtar-xl bg-white bg-opacity-25">
-                            <i class="ti ti-trending-up fs-3"></i>
+                            <i class="ti ti-trending-up fs-1"></i>
                         </div>
                     </div>
                     <div class="progress mt-3" style="height: 6px; background: rgba(255,255,255,0.3);">
@@ -32,8 +32,8 @@
                              aria-valuemax="100">
                         </div>
                     </div>
-                    <p class="mb-0 mt-2 text-white-50 small">
-                        <i class="ti ti-calendar me-1"></i>{{ $sisaHari }} hari tersisa
+                    <p class="mb-0 mt-2 text-white-50">
+                        <i class="ti ti-calendar me-1"></i>{{ $sisaWaktu }}
                     </p>
                 </div>
             </div>
@@ -46,7 +46,7 @@
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
                             <h3 class="text-white m-0 mb-1">{{ number_format($totalJamTercapai, 1) }}</h3>
-                            <p class="mb-0 text-white-50 small">Jam Tercapai</p>
+                            <p class="mb-0 text-white-50">Jam Minimal Tercapai</p>
                         </div>
                         <div class="avtar avtar-xl bg-white bg-opacity-25">
                             <i class="ti ti-clock-hour-4 fs-3"></i>
@@ -59,11 +59,11 @@
                         @php
                             $selisihJam = $targetJam - $totalJamTercapai;
                         @endphp
-                        <p class="mb-0 text-white-50 small">
+                        <p class="mb-0 text-white-50 mt-1">
                             @if($selisihJam > 0)
                                 <i class="ti ti-arrow-up-right me-1"></i>Sisa {{ number_format($selisihJam, 1) }} jam lagi
                             @else
-                                <i class="ti ti-check me-1"></i>Target tercapai!
+                                <i class="ti ti-check me-1"></i>Target tercapai !
                             @endif
                         </p>
                     </div>
@@ -78,7 +78,7 @@
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
                             <h3 class="text-white m-0 mb-1">{{ $tugasAktif }}</h3>
-                            <p class="mb-0 text-white-50 small">Tugas Aktif</p>
+                            <p class="mb-0 text-white-50">Tugas Aktif</p>
                         </div>
                         <div class="avtar avtar-xl bg-white bg-opacity-25">
                             <i class="ti ti-clipboard-check fs-3"></i>
@@ -88,7 +88,7 @@
                         <p class="mb-0 text-white">
                             <span class="fw-semibold">Perlu perhatian Anda</span>
                         </p>
-                        <p class="mb-0 text-white-50 small">
+                        <p class="mb-0 text-white-50 mt-1">
                             <i class="ti ti-alert-circle me-1"></i>Segera selesaikan tugas Anda
                         </p>
                     </div>
@@ -102,8 +102,8 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <h6 class="text-white m-0 mb-2">Laporan Akhir</h6>
-                            <span class="badge {{ $badgeClass }} fs-6 px-3 py-2">
+                            <h6 class="text-white m-0 mb-3">Laporan Akhir</h6>
+                            <span class="badge {{ $badgeClass }} fs-5 px-3 py-1.5">
                                 {{ $statusLaporanAkhir }}
                             </span>
                         </div>
@@ -111,17 +111,17 @@
                             <i class="ti ti-file-text fs-3"></i>
                         </div>
                     </div>
-                    <div class="mt-3">
+                    <div class="mt-4">
                         @if($statusLaporanAkhir === 'Belum Mengajukan')
-                            <a href="{{ route('laporan-akhir.create') }}" class="btn btn-sm btn-light">
+                            <a href="{{ route('laporan-akhir.create') }}" class="btn btn-outline-light d-inline-flex">
                                 <i class="ti ti-plus me-1"></i>Ajukan Sekarang
                             </a>
                         @elseif($statusLaporanAkhir === 'Perlu Revisi')
-                            <a href="{{ route('laporan-akhir.index') }}" class="btn btn-sm btn-light">
+                            <a href="{{ route('laporan-akhir.index') }}" class="btn btn-outline-primary d-inline-flex">
                                 <i class="ti ti-edit me-1"></i>Lihat Feedback
                             </a>
                         @else
-                            <a href="{{ route('laporan-akhir.index') }}" class="btn btn-sm btn-light">
+                            <a href="{{ route('laporan-akhir.index') }}" class="btn btn-outline-primary d-inline-flex">
                                 <i class="ti ti-eye me-1"></i>Lihat Detail
                             </a>
                         @endif
@@ -315,9 +315,9 @@
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="ti ti-chart-donut me-2"></i>Distribusi Beban Kerja
+                        <i class="ti ti-chart-donut me-2"></i>Distribusi Tugas
                     </h5>
-                    <p class="text-muted small mb-0">Status penyelesaian semua tugas Anda</p>
+                    <p class="text-muted small mb-0">Status tugas yang dikerjakan</p>
                 </div>
                 <div class="card-body">
                     <div id="chart-distribusi-beban-kerja"></div>
@@ -589,58 +589,8 @@
 
         <!-- Area Notifikasi/Pengumuman -->
         <div class="col-xl-4 col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="ti ti-bell me-2"></i>Notifikasi & Pengumuman
-                    </h5>
-                    <p class="text-muted small mb-0">Informasi penting untuk Anda</p>
-                </div>
-                <div class="card-body">
-                    @forelse($notifikasi as $notif)
-                    <div class="alert alert-{{ $notif['type'] }} border-0 mb-3" role="alert">
-                        <div class="d-flex align-items-start">
-                            <div class="avtar avtar-s bg-{{ $notif['type'] }} text-white me-3">
-                                <i class="{{ $notif['icon'] }}"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="alert-heading mb-1">{{ $notif['title'] }}</h6>
-                                <p class="mb-2 small">{{ $notif['message'] }}</p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">
-                                        <i class="ti ti-clock me-1"></i>
-                                        {{ \Carbon\Carbon::parse($notif['date'])->diffForHumans() }}
-                                    </small>
-                                    @if($notif['action_url'])
-                                        <a href="{{ $notif['action_url'] }}" class="btn btn-sm btn-{{ $notif['type'] }}">
-                                            {{ $notif['action_text'] }}
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    @empty
-                    <div class="text-center py-4">
-                        <i class="ti ti-bell-off fs-1 text-muted d-block mb-2"></i>
-                        <p class="text-muted mb-0">Tidak ada notifikasi</p>
-                        <small class="text-muted">Semua pemberitahuan akan muncul di sini</small>
-                    </div>
-                    @endforelse
-
-                    @if(count($notifikasi) > 0)
-                    <div class="text-center mt-3">
-                        <small class="text-muted">
-                            <i class="ti ti-info-circle me-1"></i>
-                            Selalu periksa notifikasi untuk informasi terbaru
-                        </small>
-                    </div>
-                    @endif
-                </div>
-            </div>
-
             <!-- Motivasi Card -->
-            <div class="card mt-3">
+            <div class="card">
                 <div class="card-body text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                     <i class="ti ti-rocket fs-1 mb-3 d-block"></i>
                     <h5 class="text-white mb-2">Terus Semangat!</h5>
@@ -663,8 +613,8 @@
                             <small class="text-white-50">Progress</small>
                         </div>
                         <div class="col-6">
-                            <h4 class="text-white mb-0">{{ $sisaHari }}</h4>
-                            <small class="text-white-50">Hari Lagi</small>
+                            <h4 class="text-white mb-0">{{ $sisaWaktu }}</h4>
+                            <small class="text-white-50">Tersisa</small>
                         </div>
                     </div>
                 </div>

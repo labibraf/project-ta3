@@ -11,7 +11,7 @@
 
 
   <!-- [Favicon] icon -->
-  <link rel="icon" href="{{ asset('template/dist') }}/assets/images/favicon.svg" type="image/x-icon"> <!-- [Google Font] Family -->
+  <link rel="icon" href="{{ asset('template/dist') }}/assets/images/logo-2.png" type="image/x-icon"> <!-- [Google Font] Family -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" id="main-font-link">
 <!-- [Tabler Icons] https://tablericons.com -->
 <link rel="stylesheet" href="{{ asset('template/dist') }}/assets/fonts/tabler-icons.min.css" >
@@ -41,10 +41,10 @@
   <div class="auth-main">
     <div class="auth-wrapper v3">
       <div class="auth-form">
-        <div class="auth-header">
-          <a href="#"><img src="{{ asset('template/dist') }}/assets/images/logo-dark.svg" alt="img"></a>
+        <div class="auth-header justify-content-center">
+          <a href="#"><img src="{{ asset('template/dist') }}/assets/images/logo-3.png" class="img-fluid" style="max-width: auto; max-height: 150px;" alt="img"></a>
         </div>
-        <div class="card my-5">
+        <div class="card my-3">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-end mb-4">
               <h3 class="mb-0"><b>Login</b></h3>
@@ -120,7 +120,7 @@
   <script>preset_change("preset-1");</script>
 
 
-  <script>font_change("Public-Sans");</script>
+  <script>font_change("poppins");</script>
 
 
 

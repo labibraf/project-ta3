@@ -56,10 +56,10 @@
                                         <span class="text-muted">Progress Anda:</span>
                                         <strong>{{ number_format($alasanTidakBisa['progress'], 1) }}%</strong>
                                     </div>
-                                    <div class="progress" style="height: 20px;">
+                                    <div class="progress" style="height: 20px; ; border: 1px solid #ccc;">
                                         <div class="progress-bar bg-{{ $alasanTidakBisa['progress'] >= 75 ? 'success' : ($alasanTidakBisa['progress'] >= 50 ? 'warning' : 'danger') }}"
                                              role="progressbar"
-                                             style="width: {{ $alasanTidakBisa['progress'] }}%"
+                                             style="width: {{ $alasanTidakBisa['progress'] }}% "
                                              aria-valuenow="{{ $alasanTidakBisa['progress'] }}"
                                              aria-valuemin="0"
                                              aria-valuemax="100">

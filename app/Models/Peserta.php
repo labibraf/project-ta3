@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Carbon\Carbon;
 
 class Peserta extends Model
 {
@@ -47,6 +48,25 @@ class Peserta extends Model
         return $this->target_waktu_tugas;
     }
 
+    public function getDurasiHariKerjaAttribute()
+    {
+        // Cek jika tanggal ada untuk menghindari error
+        if (!$this->tanggal_mulai_magang || !$this->tanggal_selesai_magang) {
+            return 0;
+        }
+
+        $start = Carbon::parse($this->tanggal_mulai_magang);
+        $end = Carbon::parse($this->tanggal_selesai_magang);
+
+        // +1 untuk membuatnya inklusif (Senin ke Jumat = 5 hari, bukan 4)
+        $totalDays = $start->diffInDays($end) + 1;
+        
+        // Hitung jumlah hari Sabtu dan Minggu
+        $weekendDays = $start->diffInWeekendDays($end);
+
+        return $totalDays - $weekendDays;
+    }
+
     /**
      * Menghitung waktu maksimum berdasarkan durasi magang
      *
@@ -55,11 +75,20 @@ class Peserta extends Model
     public function getWaktuMaksimumAttribute()
     {
         if ($this->tanggal_mulai_magang && $this->tanggal_selesai_magang) {
-            $startDate = \Carbon\Carbon::parse($this->tanggal_mulai_magang);
-            $endDate = \Carbon\Carbon::parse($this->tanggal_selesai_magang);
-            $jumlahHari = $startDate->diffInDays($endDate) + 1; // +1 untuk include hari terakhir
+            $start = \Carbon\Carbon::parse($this->tanggal_mulai_magang);
+            $end = \Carbon\Carbon::parse($this->tanggal_selesai_magang);
 
-            return $jumlahHari * 8; // 8 jam kerja per hari
+            // 1. Hitung total hari kalender (inklusif)
+            $totalDays = $start->diffInDays($end) + 1;
+
+            // 2. Hitung jumlah hari Sabtu & Minggu dalam rentang itu
+            $weekendDays = $start->diffInWeekendDays($end);
+
+            // 3. Dapatkan hari kerja (Total - Weekend)
+            $workingDays = $totalDays - $weekendDays; // Ini akan menghasilkan 44 hari kerja
+
+            // 4. Kembalikan jam kerja (Hari Kerja * 8 jam)
+            return $workingDays * 8; // Ini akan menghasilkan 44 * 8 = 352 jam
         }
 
         return 0;
@@ -127,14 +156,20 @@ class Peserta extends Model
 
     public function getProgressPercentageAttribute()
     {
+        // Tentukan target waktu (SKS atau Jam)
         $targetWaktu = $this->target_method === 'sks' ? $this->target_bobot_tugas : $this->target_waktu_tugas;
-        if ($targetWaktu == 0) return 0;
 
+        // Jika target 0, progres adalah 0 untuk menghindari pembagian dengan nol
+        if ($targetWaktu == 0) {
+            return 0;
+        }
+
+        // Hitung persentase progres standar: (Tercapai / Target)
         $percentage = ($this->waktu_tugas_tercapai / $targetWaktu) * 100;
-        $maxPercentage = ($this->waktu_maksimum > 0) ? ($this->waktu_tugas_tercapai / $this->waktu_maksimum) * 100 : 100;
 
-        // Batasi progress tidak melebihi batas maksimum
-        return round(min($percentage, $maxPercentage), 2);
+        // Batasi progres agar tidak melebihi 100%
+        // (Jika $percentage adalah 120%, fungsi min() akan mengembalikan 100)
+        return round(min($percentage, 100), 2);
     }
 
     // Di model Peserta
