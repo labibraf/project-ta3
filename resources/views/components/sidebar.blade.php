@@ -1,10 +1,10 @@
 <div>
     <nav class="pc-sidebar">
         <div class="navbar-wrapper">
-            <div class="m-header">
-                <a href="{{ route('home') }}" class="b-brand text-primary">
+            <div class="m-header mt-3 mb-3">
+                <a href="{{ route('home') }}" class="b-brand  ">
                     <!-- Ganti dengan path logo Anda jika perlu -->
-                    <img src="{{ asset('template/dist/assets/images/2.png') }}" alt="logo" class="img-fluid w-80 h-auto">
+                    <img src="{{ asset('template/dist/assets/images/logo-2.png') }}" alt="logo" class="img-fluid w-80 h-auto">
                 </a>
             </div>
             <div class="navbar-content">
@@ -20,15 +20,18 @@
                             <x-sidebar.links title="Data User" route="users.index" icon="ti ti-users"></x-sidebar.links>
                             <x-sidebar.links title="Daftar Tugas" route="penugasans.index" icon="ti ti-file-text"></x-sidebar.links>
                             <x-sidebar.links title="Laporan Akhir" route="laporan-akhir.index" icon="ti ti-file-text"></x-sidebar.links>
+                            <x-sidebar.links title="Repositori" route="repository.index" icon="ti ti-file-text"></x-sidebar.links>
                             @elseif (Auth::user()->isMentor())
                             {{-- Menu untuk Mentor --}}
                             <x-sidebar.links title="Data Peserta" route="peserta.index" icon="ti ti-plant"></x-sidebar.links>
                             <x-sidebar.links title="Daftar Tugas" route="penugasans.index" icon="ti ti-file-text"></x-sidebar.links>
                             <x-sidebar.links title="Laporan Akhir" route="laporan-akhir.index" icon="ti ti-file-text"></x-sidebar.links>
+                            <x-sidebar.links title="Repository" route="repository.index" icon="ti ti-file-text"></x-sidebar.links>
                             @else
                             {{-- Menu default untuk Peserta atau role lainnya jika diperlukan --}}
                             <x-sidebar.links title="Daftar Tugas" route="penugasans.index" icon="ti ti-file-text"></x-sidebar.links>
                             <x-sidebar.links title="Laporan Akhir" route="laporan-akhir.index" icon="ti ti-file-text"></x-sidebar.links>
+                            <x-sidebar.links title="Repository" route="repository.index" icon="ti ti-file-text"></x-sidebar.links>
                         @endif
                     @endif
                 </ul>

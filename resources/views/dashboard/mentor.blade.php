@@ -19,7 +19,7 @@
                 <div class="card-body">
                     <h3 class="text-white m-0">{{ $pesertaLulus }} Peserta Lulus</h3>
                     <span class="m-t-10">dari {{ $totalPesertaBimbingan }} Peserta</span>
-                    <i class="ti ti-clock-exclamation"></i>
+                    <i class="ti ti-user-check"></i>
                 </div>
             </div>
         </div>
@@ -155,7 +155,7 @@
 
     <!-- PRIORITAS 1: Tabel Progres Peserta Bimbingan -->
     <div class="row mt-4">
-        <div class="col-12">
+        <div class="col-6">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="ti ti-users me-2"></i>Progres Peserta Bimbingan</h5>
@@ -190,7 +190,7 @@
                                     <td>{{ $peserta->asal_instansi }}</td>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                            <div class="progress flex-grow-1 me-2" style="height: 8px; border: 2px solid #ccc; border-radius: 4px">
                                                 <div class="progress-bar
                                                     @if($peserta->progress_percentage >= 75) bg-success
                                                     @elseif($peserta->progress_percentage >= 25) bg-warning
@@ -204,9 +204,9 @@
                                                 </div>
                                             </div>
                                             <span class="badge
-                                                @if($peserta->progress_percentage >= 75) bg-success
-                                                @elseif($peserta->progress_percentage >= 25) bg-warning
-                                                @else bg-danger
+                                                @if($peserta->progress_percentage >= 75) bg-success #28a745
+                                                @elseif($peserta->progress_percentage >= 25) bg-warning #ffc107
+                                                @else bg-danger #dc3545
                                                 @endif">
                                                 {{ number_format($peserta->progress_percentage, 1) }}%
                                             </span>
@@ -214,11 +214,11 @@
                                     </td>
                                     <td>
                                         @if($peserta->progress_percentage >= 75)
-                                            <span class="badge bg-success">Mahir</span>
+                                            <span class="badge bg-success">Segera Selesai</span>
                                         @elseif($peserta->progress_percentage >= 25)
-                                            <span class="badge bg-warning">Menengah</span>
+                                            <span class="badge bg-warning">Sedang Berlangsung</span>
                                         @else
-                                            <span class="badge bg-danger">Pemula</span>
+                                            <span class="badge bg-danger">Belum Mulai</span>
                                         @endif
                                     </td>
                                     <td class="text-center">
@@ -241,11 +241,7 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- PRIORITAS 2: Tabel Log Laporan Harian Terbaru -->
-    <div class="row mt-4">
-        <div class="col-12">
+        <div class="col-6">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="ti ti-file-text me-2"></i>Log Laporan Harian Terbaru</h5>
@@ -315,6 +311,79 @@
             </div>
         </div>
     </div>
+
+    <!-- PRIORITAS 2: Tabel Log Laporan Harian Terbaru -->
+    <!-- <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="ti ti-file-text me-2"></i>Log Laporan Harian Terbaru</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nama Peserta</th>
+                                    <th>Aktivitas/Tugas</th>
+                                    <th>Tanggal</th>
+                                    <th class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($laporanHarianTerbaru as $laporan)
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avtar avtar-s bg-light-info me-2">
+                                                <i class="ti ti-user"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">{{ $laporan->peserta->nama_lengkap }}</h6>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            @if($laporan->penugasan)
+                                                <h6 class="mb-0">{{ Str::limit($laporan->penugasan->judul_tugas, 40) }}</h6>
+                                                <small class="text-muted">{{ Str::limit($laporan->deskripsi_kegiatan, 50) }}</small>
+                                            @else
+                                                <p class="mb-0">{{ Str::limit($laporan->deskripsi_kegiatan, 60) }}</p>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            <i class="ti ti-calendar me-1"></i>
+                                            {{ \Carbon\Carbon::parse($laporan->created_at)->format('d M Y') }}
+                                        </small>
+                                    </td>
+                                    <td class="text-center">
+                                        @if($laporan->penugasan_id)
+                                            <a href="{{ route('penugasans.show', $laporan->penugasan_id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="ti ti-eye"></i>
+                                            </a>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">
+                                        <i class="ti ti-file-text fs-1 text-muted d-block mb-2"></i>
+                                        <p class="text-muted mb-0">Belum ada laporan harian</p>
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> -->
 </div>
 
 @push('styles')

@@ -126,7 +126,7 @@
                             <div class="mb-3">
                                 <label class="text-muted">Durasi</label>
                                 <p class="mb-0">
-                                    {{ \Carbon\Carbon::parse($peserta->tanggal_mulai_magang)->diffInDays($peserta->tanggal_selesai_magang) }} Hari
+                                    {{ $peserta->durasi_hari_kerja }} Hari Kerja
                                 </p>
                             </div>
                         </div>

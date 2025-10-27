@@ -404,14 +404,23 @@ document.addEventListener('DOMContentLoaded', function() {
             const end = new Date(endDate);
 
             if (end >= start) {
-                const timeDiff = end.getTime() - start.getTime();
-                const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // +1 untuk inklusif
-                const maxHours = daysDiff * 8;
+                let workingDays = 0;
+                const currentDate = new Date(start.getTime()); 
+
+                while (currentDate <= end) {
+                    const dayOfWeek = currentDate.getDay(); 
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                        workingDays++;
+                    }
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                const maxHours = workingDays * 8; 
 
                 maxTimeInfo.innerHTML = `
-                    <strong>Durasi Magang:</strong> ${daysDiff} hari<br>
-                    <strong>Waktu Maksimum:</strong> ${maxHours} jam <small>(${daysDiff} hari × 8 jam/hari)</small>
+                    <strong>Durasi Magang:</strong> ${workingDays} hari kerja<br>
+                    <strong>Waktu Maksimum:</strong> ${maxHours} jam <small>(${workingDays} hari × 8 jam/hari)</small>
                 `;
+
             } else {
                 maxTimeInfo.innerHTML = '<small class="text-danger">Tanggal selesai harus setelah tanggal mulai</small>';
             }
